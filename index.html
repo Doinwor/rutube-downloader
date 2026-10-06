@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>i. Rutube Downloader — скачивание видео с Rutube</title>
+<meta name="description" content="i. Rutube Downloader — десктопная программа для скачивания видео с Rutube в максимальном качестве. Публичные и приватные ролики, выбор качества, ничего лишнего.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200..900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --muted: #8a8a8a;
+    --line: #e0e0e0;
+    --soft: #f5f5f5;
+  }
+
+  [data-theme="dark"] {
+    --bg: #000000;
+    --fg: #ffffff;
+    --muted: #7a7a7a;
+    --line: #242424;
+    --soft: #0d0d0d;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Unbounded', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    transition: background .3s, color .3s;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--fg); color: var(--bg); }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+
+  /* ─── nav ─── */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-in {
+    max-width: 1080px; margin: 0 auto; padding: 18px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-weight: 900; font-size: 20px; letter-spacing: -.03em;
+    color: var(--fg); text-decoration: none;
+  }
+  .logo span { font-weight: 200; opacity: .45; }
+  .nav-links { display: flex; gap: 26px; align-items: center; }
+  .nav-links a {
+    font-size: 11px; font-weight: 300; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted);
+    text-decoration: none; transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--fg); }
+  .nav-dl {
+    border: 1px solid var(--fg) !important; color: var(--fg) !important;
+    padding: 9px 20px; font-weight: 500 !important;
+    transition: background .2s, color .2s !important;
+  }
+  .nav-dl:hover { background: var(--fg); color: var(--bg) !important; }
+  .burger { display: none; background: none; border: 0; font-size: 22px; color: var(--fg); cursor: pointer; }
+
+  /* ─── hero ─── */
+  .hero { padding: 96px 0 72px; border-bottom: 1px solid var(--line); position: relative; overflow: hidden; }
+  .kicker {
+    font-size: 10px; font-weight: 400; letter-spacing: .35em;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 10px; margin-bottom: 30px;
+  }
+  .kicker::before { content: ""; width: 40px; height: 1px; background: var(--fg); }
+  h1 {
+    font-size: clamp(42px, 8vw, 92px); font-weight: 900;
+    line-height: .96; letter-spacing: -.045em;
+  }
+  h1 em { font-style: normal; font-weight: 200; opacity: .35; }
+  .lead {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px; font-weight: 300; line-height: 1.7;
+    color: var(--muted); max-width: 560px; margin-top: 28px;
+  }
+  .lead b { color: var(--fg); font-weight: 500; }
+
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 40px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 17px 34px; text-decoration: none; border: 1px solid var(--fg);
+    letter-spacing: .02em; cursor: pointer; transition: all .2s;
+  }
+  .btn-solid { background: var(--fg); color: var(--bg); }
+  .btn-solid:hover { background: transparent; color: var(--fg); }
+  .btn-ghost { background: transparent; color: var(--fg); }
+  .btn-ghost:hover { background: var(--fg); color: var(--bg); }
+  .btn small { font-weight: 300; opacity: .55; font-size: 11px; }
+
+  .meta-row {
+    display: flex; gap: 44px; margin-top: 60px; flex-wrap: wrap;
+    padding-top: 34px; border-top: 1px solid var(--line);
+  }
+  .meta-row div b { display: block; font-size: 26px; font-weight: 700; letter-spacing: -.03em; }
+  .meta-row div span {
+    font-family: 'Inter', sans-serif; font-size: 11px; color: var(--muted);
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+
+  /* ─── shot ─── */
+  .shot { padding: 72px 0; border-bottom: 1px solid var(--line); }
+  .shot-frame {
+    border: 1px solid var(--fg); background: var(--soft);
+    padding: 10px; position: relative;
+  }
+  .shot-bar {
+    display: flex; align-items: center; gap: 7px;
+    padding: 0 4px 10px;
+  }
+  .shot-bar i { width: 9px; height: 9px; border: 1px solid var(--fg); display: block; }
+  .shot-bar span {
+    margin-left: auto; font-size: 9px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .shot-frame img { display: block; width: 100%; height: auto; }
+  .shot-cap {
+    font-family: 'Inter', sans-serif; font-size: 12px; color: var(--muted);
+    margin-top: 14px; text-align: center;
+  }
+
+  /* ─── sections ─── */
+  section.blk { padding: 80px 0; border-bottom: 1px solid var(--line); }
+  .sec-head { display: flex; align-items: baseline; gap: 20px; margin-bottom: 46px; }
+  .sec-num { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: .1em; }
+  .sec-title { font-size: clamp(24px, 4vw, 38px); font-weight: 700; letter-spacing: -.03em; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .cell { background: var(--bg); padding: 34px 28px; transition: background .25s; }
+  .cell:hover { background: var(--soft); }
+  .cell b { display: block; font-size: 15px; font-weight: 600; margin-bottom: 12px; letter-spacing: -.01em; }
+  .cell p {
+    font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 300;
+    line-height: 1.75; color: var(--muted);
+  }
+  .cell .idx {
+    font-size: 10px; color: var(--fg); letter-spacing: .2em;
+    display: block; margin-bottom: 20px; opacity: .35;
+  }
+
+  /* ─── steps ─── */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .step { border-top: 2px solid var(--fg); padding-top: 20px; }
+  .step i {
+    font-style: normal; font-size: 11px; font-weight: 600;
+    letter-spacing: .2em; color: var(--muted);
+  }
+  .step b { display: block; font-size: 17px; font-weight: 600; margin: 12px 0 10px; }
+  .step p { font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 300; line-height: 1.7; color: var(--muted); }
+
+  /* ─── specs ─── */
+  .specs { border: 1px solid var(--line); }
+  .spec {
+    display: grid; grid-template-columns: 220px 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .spec:last-child { border-bottom: 0; }
+  .spec dt {
+    padding: 18px 24px; font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--muted);
+    background: var(--soft); border-right: 1px solid var(--line);
+  }
+  .spec dd {
+    padding: 18px 24px; font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 400;
+  }
+
+  /* ─── download block ─── */
+  .dl { padding: 90px 0; text-align: center; border-bottom: 1px solid var(--line); }
+  .dl h2 { font-size: clamp(30px, 5vw, 54px); font-weight: 900; letter-spacing: -.04em; line-height: 1.05; }
+  .dl p {
+    font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 300;
+    color: var(--muted); margin-top: 18px;
+  }
+  .dl .btn { margin-top: 36px; font-size: 15px; padding: 21px 46px; }
+  .dl-note {
+    font-family: 'Inter', sans-serif; font-size: 12px; color: var(--muted);
+    margin-top: 22px; letter-spacing: .04em;
+  }
+
+  /* ─── faq ─── */
+  details {
+    border-bottom: 1px solid var(--line); padding: 22px 0; cursor: pointer;
+  }
+  details:first-of-type { border-top: 1px solid var(--line); }
+  summary {
+    list-style: none; font-size: 15px; font-weight: 500;
+    display: flex; justify-content: space-between; gap: 20px; align-items: center;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-size: 22px; font-weight: 200; transition: transform .25s; }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p {
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 300;
+    line-height: 1.8; color: var(--muted); margin-top: 16px; max-width: 760px;
+  }
+
+  /* ─── footer ─── */
+  footer { padding: 54px 0 44px; }
+  .foot-in { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: center; }
+  footer a { color: var(--muted); text-decoration: none; font-size: 11px; letter-spacing: .08em; transition: color .2s; }
+  footer a:hover { color: var(--fg); }
+  .foot-mark { font-size: 28px; font-weight: 900; letter-spacing: -.05em; }
+
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+  .reveal.on { opacity: 1; transform: none; }
+
+  @media (max-width: 860px) {
+    .grid-3, .steps { grid-template-columns: 1fr; }
+    .spec { grid-template-columns: 1fr; }
+    .spec dt { border-right: 0; border-bottom: 1px solid var(--line); }
+    .nav-links {
+      display: none; position: absolute; top: 100%; left: 0; right: 0;
+      flex-direction: column; gap: 0; background: var(--bg);
+      border-bottom: 1px solid var(--line); padding: 8px 28px 20px;
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .nav-links a:last-child { border-bottom: 0; }
+    .burger { display: block; }
+    .meta-row { gap: 28px; }
+    .hero { padding: 64px 0 52px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <a href="#" class="logo">i.<span>rutube downloader</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#features">Возможности</a>
+      <a href="#how">Как работает</a>
+      <a href="#specs">Системные требования</a>
+      <a href="#faq">Вопросы</a>
+      <a href="#download" class="nav-dl">Скачать</a>
+    </div>
+    <button class="burger" id="burger" aria-label="Меню">☰</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Десктопная программа · Windows · 2026</div>
+    <h1>Rutube<br><em>Downloader</em></h1>
+    <p class="lead">
+      Скачивает видео с Rutube <b>в максимальном качестве</b> — вплоть до 4K.
+      Работает с публичными и приватными роликами, выбирает качество сам или по вашему указанию.
+      Ничего лишнего: ссылка, качество, кнопка.
+    </p>
+
+    <div class="cta-row">
+      <a href="#download" class="btn btn-solid">Скачать программу <small>.exe · 50 МБ</small></a>
+      <a href="https://github.com/Doinwor/rutube-downloader" target="_blank" rel="noopener" class="btn btn-ghost">Исходный код</a>
+    </div>
+
+    <div class="meta-row">
+      <div><b>4K</b><span>максимальное качество</span></div>
+      <div><b>1 клик</b><span>от ссылки до файла</span></div>
+      <div><b>0</b><span>регистраций и подписок</span></div>
+      <div><b>∞</b><span>бесплатно</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="shot">
+  <div class="wrap">
+    <div class="shot-frame reveal">
+      <div class="shot-bar"><i></i><i></i><i></i><span>i. Rutube Downloader</span></div>
+      <img src="screenshot.jpg" alt="Интерфейс i. Rutube Downloader" loading="lazy">
+    </div>
+    <p class="shot-cap">Интерфейс программы — белый фон, чёрный текст, шрифт Unbounded</p>
+  </div>
+</div>
+
+<section class="blk" id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">01</span>
+      <h2 class="sec-title">Возможности</h2>
+    </div>
+    <div class="grid-3 reveal">
+      <div class="cell">
+        <span class="idx">01 / КАЧЕСТВО</span>
+        <b>До 4K включительно</b>
+        <p>Программа запрашивает у Rutube все доступные потоки и отдаёт лучший. Можно зафиксировать качество — 1080, 720, 480 или 360.</p>
+      </div>
+      <div class="cell">
+        <span class="idx">02 / ДОСТУП</span>
+        <b>Приватные ролики</b>
+        <p>Поддерживаются приватные ссылки Rutube с ключом доступа. Вставляете ссылку целиком — программа разберётся сама.</p>
+      </div>
+      <div class="cell">
+        <span class="idx">03 / ФОРМАТ</span>
+        <b>Готовый mp4</b>
+        <p>Видео и аудио склеивается через ffmpeg в один файл. Открывается любым плеером без дополнительных кодеков.</p>
+      </div>
+      <div class="cell">
+        <span class="idx">04 / ПРОЦЕСС</span>
+        <b>Видимый прогресс</b>
+        <p>Полоска загрузки, проценты и статус прямо в окне. Анимация идёт ровно столько, сколько идёт скачивание.</p>
+      </div>
+      <div class="cell">
+        <span class="idx">05 / УПРАВЛЕНИЕ</span>
+        <b>Своя папка</b>
+        <p>Куда класть файл — решаете вы. По окончании можно автоматически открыть папку с результатом.</p>
+      </div>
+      <div class="cell">
+        <span class="idx">06 / ОГРАНИЧЕНИЯ</span>
+        <b>Ничего не нужно</b>
+        <p>Без аккаунтов, подписок, рекламы и телеметрии. Один файл, двойной клик — и всё работает.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blk" id="how">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">02</span>
+      <h2 class="sec-title">Как это работает</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <i>ШАГ 01</i>
+        <b>Вставьте ссылку</b>
+        <p>Скопируйте адрес ролика в браузере и вставьте в поле — кнопкой «Вставить», Ctrl+V или правой кнопкой мыши.</p>
+      </div>
+      <div class="step">
+        <i>ШАГ 02</i>
+        <b>Выберите качество</b>
+        <p>Оставьте «best» для максимального разрешения или укажите нужное: 1080, 720, 480, 360.</p>
+      </div>
+      <div class="step">
+        <i>ШАГ 03</i>
+        <b>Нажмите «Скачать»</b>
+        <p>Прогресс идёт в окне. Готовый файл появится в выбранной папке, папку можно открыть автоматически.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="blk" id="specs">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">03</span>
+      <h2 class="sec-title">Системные требования</h2>
+    </div>
+    <dl class="specs reveal">
+      <div class="spec"><dt>Операционная система</dt><dd>Windows 10 / 11 (64 бит)</dd></div>
+      <div class="spec"><dt>Размер файла</dt><dd>≈ 50 МБ, один исполняемый файл</dd></div>
+      <div class="spec"><dt>Установка</dt><dd>Не требуется — запускается напрямую</dd></div>
+      <div class="spec"><dt>Зависимости</dt><dd>Встроены: yt-dlp, ffmpeg, интерфейс</dd></div>
+      <div class="spec"><dt>Интернет</dt><dd>Нужен только для скачивания ролика</dd></div>
+      <div class="spec"><dt>Стоимость</dt><dd>Бесплатно, без ограничений</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="dl" id="download">
+  <div class="wrap">
+    <h2>Скачать<br>i. Rutube Downloader</h2>
+    <p>Один файл. Двойной клик — и программа открыта.</p>
+    <a href="https://github.com/Doinwor/rutube-downloader/releases/latest/download/i.-Rutube-Downloader.exe" class="btn btn-solid">
+      Скачать .exe
+    </a>
+    <div class="dl-note">Версия 1.0.0 · Windows 10/11 · 50 МБ · обновлено 2026</div>
+  </div>
+</section>
+
+<section class="blk" id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="sec-num">04</span>
+      <h2 class="sec-title">Вопросы</h2>
+    </div>
+    <div class="reveal">
+      <details>
+        <summary>Скачивает ли программа приватные видео?</summary>
+        <p>Да, если у вас есть действующая ссылка с ключом доступа. Вставьте её целиком — параметр ключа передаётся автоматически.</p>
+      </details>
+      <details>
+        <summary>Какое максимальное качество?</summary>
+        <p>Всё, что доступно у ролика на Rutube — вплоть до 4K. Значение «best» в меню качества выбирает максимально доступный поток.</p>
+      </details>
+      <details>
+        <summary>Нужно ли устанавливать ffmpeg?</summary>
+        <p>Нет. ffmpeg уже встроен в программу и используется для склейки видео и аудио в один mp4-файл.</p>
+      </details>
+      <details>
+        <summary>Программа платная?</summary>
+        <p>Нет. Она бесплатна, не содержит рекламы, не требует регистрации и не собирает данные.</p>
+      </details>
+      <details>
+        <summary>А если файл уже скачивается не в ту папку?</summary>
+        <p>Укажите нужную папку в поле «Папка» или выберите её кнопкой «...». Галочка «Открывать папку после скачивания» покажет результат сразу.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div class="foot-mark">i.</div>
+    <a href="https://doinwor.github.io/go-ecosystem/i-site/" target="_blank" rel="noopener">Сайт студии</a>
+    <a href="https://github.com/Doinwor/rutube-downloader" target="_blank" rel="noopener">GitHub</a>
+    <a href="#top">Наверх ↑</a>
+    <span style="font-size:11px;color:var(--muted);letter-spacing:.08em">і. · rutube downloader · 2026</span>
+  </div>
+</footer>
+
+<script>
+  var t = localStorage.getItem('i-theme');
+  if (t) document.documentElement.setAttribute('data-theme', t);
+
+  document.getElementById('burger').addEventListener('click', function () {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+  document.querySelectorAll('#navLinks a').forEach(function (a) {
+    a.addEventListener('click', function () {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('on'); });
+  }, { threshold: .12 });
+  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+</script>
+</body>
+</html>
